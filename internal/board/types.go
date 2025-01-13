@@ -22,6 +22,34 @@ const (
 
 type Bitboard uint64
 
+func (bb Bitboard) Set(sq Square) Bitboard {
+	return bb | (1 << sq)
+}
+
+func (bb Bitboard) Clear(sq Square) Bitboard {
+	return bb &^ (1 << sq)
+}
+
+func (bb Bitboard) IsSet(sq Square) bool {
+	return (bb & (1 << sq)) != 0
+}
+
+func (bb Bitboard) String() string {
+	var result string
+	for rank := 7; rank >= 0; rank-- {
+		for file := 0; file < 8; file++ {
+			sq := Square(rank*8 + file)
+			if bb.IsSet(sq) {
+				result += "1 "
+			} else {
+				result += "0 "
+			}
+		}
+		result += "\n"
+	}
+	return result
+}
+
 const (
 	FileA Bitboard = 0x0101010101010101
 	FileB Bitboard = FileA << 1
