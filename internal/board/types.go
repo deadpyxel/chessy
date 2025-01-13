@@ -28,14 +28,17 @@ const (
 
 type Bitboard uint64
 
+// Set sets a bit in the Bitboard at the specified Square position.
 func (bb Bitboard) Set(sq Square) Bitboard {
 	return bb | (1 << sq)
 }
 
+// Clear sets the bit at the given square to 0 in the Bitboard and returns the updated Bitboard.
 func (bb Bitboard) Clear(sq Square) Bitboard {
 	return bb &^ (1 << sq)
 }
 
+// IsSet checks if a specific bit is set in the given Bitboard.
 func (bb Bitboard) IsSet(sq Square) bool {
 	return (bb & (1 << sq)) != 0
 }
