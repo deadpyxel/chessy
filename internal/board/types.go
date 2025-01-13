@@ -6,6 +6,12 @@ type Piece uint8
 // Custom type for piece Color
 type Color uint8
 
+const (
+	White Color = iota
+	Black
+	None
+)
+
 // Custom type for a Square in the board
 type Square uint8
 
@@ -79,4 +85,50 @@ type Board struct {
 
 	// Positional information
 	SideToMove Color
+}
+
+// SetInitialBoard initializes the chess board with the starting positions of all pieces.
+func (b *Board) SetInitialBoard() {
+	// White pieces
+	b.Pieces[White][Pawn] = Rank2
+	b.Pieces[White][Rook] = (1 << 0) | (1 << 7)   // A1 and H1
+	b.Pieces[White][Knight] = (1 << 1) | (1 << 6) // B1 and G1
+	b.Pieces[White][Bishop] = (1 << 2) | (1 << 5) // C1 and F1
+	b.Pieces[White][Queen] = (1 << 3)             // D1
+	b.Pieces[White][King] = (1 << 4)              // E1
+	// Black pieces (White pieces shifted by 56 squares)
+	b.Pieces[Black][Pawn] = Rank7
+	b.Pieces[Black][Rook] = b.Pieces[White][Rook] << 56
+	b.Pieces[Black][Knight] = b.Pieces[White][Knight] << 56
+	b.Pieces[Black][Bishop] = b.Pieces[White][Bishop] << 56
+	b.Pieces[Black][Queen] = b.Pieces[White][Queen] << 56
+	b.Pieces[Black][King] = b.Pieces[White][King] << 56
+
+	// Update all occupied squares on the boards
+	b.UpdateOccupiedSquares()
+}
+
+// UpdateOccupiedSquares updates the occupied squares on the board for both white and black pieces.
+func (b *Board) UpdateOccupiedSquares() {
+	b.OccupiedByColor[White] = 0
+	b.OccupiedByColor[Black] = 0
+
+	for piece := Pawn; piece <= King; piece++ {
+		b.OccupiedByColor[White] |= b.Pieces[White][piece]
+		b.OccupiedByColor[Black] |= b.Pieces[Black][piece]
+	}
+
+	b.OccupiedSquares = b.OccupiedByColor[White] | b.OccupiedByColor[Black]
+}
+
+// GetPieceAt returns the piece and its color at the given square
+func (b *Board) GetPieceAt(sq Square) (Color, Piece) {
+	for color := White; color <= Black; color++ {
+		for piece := Pawn; piece <= King; piece++ {
+			if b.Pieces[color][piece].IsSet(sq) {
+				return color, piece
+			}
+		}
+	}
+	return None, Empty
 }
