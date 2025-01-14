@@ -15,6 +15,29 @@ const (
 // Custom type for a Square in the board
 type Square uint8
 
+// Files and ranks for chess notation
+var filesLbl = [8]rune{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'}
+var ranksLbl = [8]rune{'1', '2', '3', '4', '5', '6', '7', '8'}
+
+func (sq Square) String() string {
+	file := filesLbl[sq.FileOf()]
+	rank := ranksLbl[sq.RankOf()]
+
+	result := make([]byte, 2)
+	result[0] = byte(file)
+	result[1] = byte(rank)
+
+	return string(result)
+}
+
+func (sq Square) FileOf() int {
+	return int(sq % 8)
+}
+
+func (sq Square) RankOf() int {
+	return int(sq / 8)
+}
+
 // Constants for Piece Enum
 const (
 	Empty Piece = iota
