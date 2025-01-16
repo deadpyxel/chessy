@@ -115,13 +115,14 @@ func (b *Board) generateSlidingPieceMoves(sq Square, color Color, directions []i
 	occSameColor := b.OccupiedByColor[color]  // squares occupied by same color
 	occOppColor := b.OccupiedByColor[color^1] // squares ocuppied by opposite colors
 	fromFile := sq.FileOf()
+	fromRank := sq.RankOf()
 	for _, dir := range directions {
 		toSq := int(sq)
 		currFile := fromFile // Initialize currFile for this direction
+		currRank := fromRank
 
 		for {
 			toSq += dir
-			mvType := Normal
 			// Out of bounds check
 			if isOutOfBounds(toSq) {
 				break
@@ -129,23 +130,42 @@ func (b *Board) generateSlidingPieceMoves(sq Square, color Color, directions []i
 
 			tgtSq := Square(toSq)
 			toFile := tgtSq.FileOf()
-			// Check if this move would wrap around board edges
-			if fileDiff := utils.Abs(toFile - currFile); fileDiff > 1 {
+			toRank := tgtSq.RankOf()
+
+			fileDiff := utils.Abs(toFile - currFile)
+			rankDiff := utils.Abs(toRank - currRank)
+			absDir := utils.Abs(dir)
+
+			// For diagonal moves the difference should be only of 1
+			isDiagonal := absDir == 7 || absDir == 9
+			if isDiagonal && (fileDiff != 1 || rankDiff != 1) {
 				break
 			}
-			// Update currFile for next iteration
-			currFile = toFile
+			// For horizontal moves only the file should change
+			isHorizontal := absDir == 1
+			if isHorizontal && rankDiff != 0 {
+				break
+			}
+			// For vertical moves only the rank should change
+			isVertical := absDir == 8
+			if isVertical && fileDiff != 0 {
+				break
+			}
 			// Stop if we reach our own piece
 			if occSameColor.IsSet(tgtSq) {
 				break
 			}
 
+			mvType := Normal
 			if occOppColor.IsSet(tgtSq) {
 				mvType = Capture
 				ml.addMove(Move{From: sq, To: tgtSq, Type: mvType})
 				break
 			}
 			ml.addMove(Move{From: sq, To: tgtSq, Type: mvType})
+			// Update current position
+			currFile = toFile
+			currRank = toRank
 		}
 	}
 }
