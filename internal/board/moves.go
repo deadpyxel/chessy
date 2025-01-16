@@ -4,12 +4,13 @@ import "github.com/deadpyxel/cheesy/internal/utils"
 
 type MoveType uint8
 
+// Types of chess movements
 const (
-	Normal MoveType = iota
-	Capture
-	EnPassant
-	Castle
-	Promotion
+	Normal    MoveType = iota // move a piece
+	Capture                   // move to a square and capture opponent piece
+	EnPassant                 // special pawn capture
+	Castle                    // special movement between rook and king
+	Promotion                 // special move for pawn, changing into another piece
 )
 
 // Move represents a chess move
@@ -22,8 +23,8 @@ type Move struct {
 
 // Container for possible moves
 type MoveList struct {
-	Moves [256]Move
-	Count int
+	Moves [256]Move // provisional limit of number of moves generated
+	Count int       // current amount of moves present on the MoveList
 }
 
 func (ml *MoveList) addMove(m Move) {
@@ -36,13 +37,13 @@ func (ml *MoveList) addMove(m Move) {
 // Lookup table for movements
 var (
 	// Move positions for Knight and King cases
-	KnightMoves = [8]int{-17, -15, -10, -6, 6, 10, 15, 17} // L shape movement (8 * rank + file)
-	KingMoves   = [8]int{-9, -8, -7, -1, 1, 7, 8, 9}
+	KnightMoves = [8]int{-17, -15, -10, -6, 6, 10, 15, 17} // L shape movement (8 * rank + file), jumps over pieces
+	KingMoves   = [8]int{-9, -8, -7, -1, 1, 7, 8, 9}       // only one square in any direction.
 
 	// Directions for sliding pieces
-	BishopDirections = [4]int{-9, -7, 7, 9}
-	RookDirections   = [4]int{-8, -1, 1, 8}
-	QueenDirections  = [8]int{-9, -8, -7, -1, 1, 7, 8, 9}
+	BishopDirections = [4]int{-9, -7, 7, 9}               // any amount of square in diagonals
+	RookDirections   = [4]int{-8, -1, 1, 8}               // any amount of squares in file and ranks
+	QueenDirections  = [8]int{-9, -8, -7, -1, 1, 7, 8, 9} // combined Bishop and Rook movements
 )
 
 func isOutOfBounds(sq int) bool {
