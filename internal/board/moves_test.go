@@ -267,3 +267,147 @@ func TestGenerateSlidingMoves(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateKingMoves(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(*Board)
+		startSq       Square
+		expectedMoves []Move
+	}{
+		{
+			name: "white king on e4 on am empty board returns 8 possible moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(1 << 28)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(28),
+			expectedMoves: []Move{
+				{From: 28, To: 37, Type: Normal},
+				{From: 28, To: 36, Type: Normal},
+				{From: 28, To: 35, Type: Normal},
+				{From: 28, To: 29, Type: Normal},
+				{From: 28, To: 27, Type: Normal},
+				{From: 28, To: 21, Type: Normal},
+				{From: 28, To: 20, Type: Normal},
+				{From: 28, To: 19, Type: Normal},
+			},
+		},
+		{
+			name: "white king on corner a1 on am empty board returns 3 possible moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(0)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(0),
+			expectedMoves: []Move{
+				{From: 0, To: 1, Type: Normal},
+				{From: 0, To: 8, Type: Normal},
+				{From: 0, To: 9, Type: Normal},
+			},
+		},
+		{
+			name: "white king on edge a4 on am empty board returns 5 possible moves wihtout any H file moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(1 << 24)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(24),
+			expectedMoves: []Move{
+				{From: 24, To: 32, Type: Normal},
+				{From: 24, To: 33, Type: Normal},
+				{From: 24, To: 25, Type: Normal},
+				{From: 24, To: 16, Type: Normal},
+				{From: 24, To: 17, Type: Normal},
+			},
+		},
+		{
+			name: "white king on corner a1 surrounded by white pieces returns 0 possible moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(0)
+				b.Pieces[White][Knight] = Bitboard(1 << 1)
+				b.Pieces[White][Pawn] = Rank2
+				b.UpdateOccupiedSquares()
+			},
+			startSq:       Square(0),
+			expectedMoves: []Move{},
+		},
+		{
+			name: "white king on corner a1 surrounded by black pieces board returns 3 possible capture moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(0)
+				b.Pieces[Black][Knight] = Bitboard(1<<1 | 1<<9)
+				b.Pieces[Black][Bishop] = Bitboard(1 << 8)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(0),
+			expectedMoves: []Move{
+				{From: 0, To: 1, Type: Capture},
+				{From: 0, To: 8, Type: Capture},
+				{From: 0, To: 9, Type: Capture},
+			},
+		},
+		{
+			name: "white king on edge h4 on empty board returns 5 possible moves without any A file moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(1 << 31)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(31),
+			expectedMoves: []Move{
+				{From: 31, To: 39, Type: Normal},
+				{From: 31, To: 38, Type: Normal},
+				{From: 31, To: 30, Type: Normal},
+				{From: 31, To: 23, Type: Normal},
+				{From: 31, To: 22, Type: Normal},
+			},
+		},
+		{
+			name: "white king on edge e8 on empty board returns 5 possible moves without any rank 1 moves",
+			setup: func(b *Board) {
+				b.Pieces[White][King] = Bitboard(1 << 60)
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(60),
+			expectedMoves: []Move{
+				{From: 60, To: 59, Type: Normal},
+				{From: 60, To: 61, Type: Normal},
+				{From: 60, To: 52, Type: Normal},
+				{From: 60, To: 51, Type: Normal},
+				{From: 60, To: 53, Type: Normal},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setup(b)
+
+			var ml MoveList
+			b.generateKingMoves(tt.startSq, White, &ml)
+			if ml.Count != len(tt.expectedMoves) {
+				t.Errorf("Expected moveset to have %d entries, got %d instead", len(tt.expectedMoves), ml.Count)
+				fmt.Printf("%s\n", &ml)
+			}
+
+			genMoves := extractMoves(&ml)
+			for _, expMove := range tt.expectedMoves {
+				move, exists := genMoves[expMove.To]
+				if !exists {
+					t.Errorf("Expected move to %s not found", expMove.To)
+					continue
+				}
+				if move.From != tt.startSq {
+					t.Errorf("Expected move to start at %s, got %s instead", tt.startSq, move.From)
+				}
+				if move.From != expMove.From {
+					t.Errorf("Mismatch between expected move start at %s, got %s instead", expMove.From, move.From)
+				}
+				if move.Type != expMove.Type {
+					t.Errorf("Expected move to %s type to be %d, got %d instead", expMove.To, expMove.Type, move.Type)
+				}
+			}
+		})
+
+	}
+}
