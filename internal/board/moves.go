@@ -91,7 +91,7 @@ func (b *Board) generateKnightMoves(sq Square, color Color, ml *MoveList) {
 		tgtSq := Square(toSq)
 		toFile := tgtSq.FileOf()
 		// Check if this move would wrap around board edges
-		if fileDiff := utils.Abs(fromFile - toFile); fileDiff > 2 {
+		if utils.Abs(fromFile-toFile) > 2 {
 			continue
 		}
 		// Skip cases where the square is occupied by the same color
