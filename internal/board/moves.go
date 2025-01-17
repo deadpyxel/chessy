@@ -1,6 +1,10 @@
 package board
 
-import "github.com/deadpyxel/cheesy/internal/utils"
+import (
+	"fmt"
+
+	"github.com/deadpyxel/cheesy/internal/utils"
+)
 
 type MoveType uint8
 
@@ -32,6 +36,24 @@ func (ml *MoveList) addMove(m Move) {
 		ml.Moves[ml.Count] = m
 		ml.Count++
 	}
+}
+
+func (ml *MoveList) String() string {
+	var str string
+	squares := make([]Square, ml.Count)
+	for i := 0; i < ml.Count; i++ {
+		str += ml.Moves[i].String() + "\n"
+		squares[i] = ml.Moves[i].To
+	}
+	bb := Bitboard(0)
+	for _, sq := range squares {
+		bb = bb.Set(sq)
+	}
+	return fmt.Sprintf("\n%s\n%s", bb, str)
+}
+
+func (m Move) String() string {
+	return m.From.String() + " -> " + m.To.String()
 }
 
 // Lookup table for movements

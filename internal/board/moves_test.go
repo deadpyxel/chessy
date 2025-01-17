@@ -250,7 +250,7 @@ func TestGenerateSlidingMoves(t *testing.T) {
 
 			if ml.Count != len(tt.expectedMoves) {
 				t.Errorf("Expected moveset to have %d entries, got %d instead", len(tt.expectedMoves), ml.Count)
-				fmt.Printf("%v\n", ml.Moves[:ml.Count])
+				fmt.Printf("%s\n", &ml)
 			}
 
 			genMoves := extractMoves(&ml)
