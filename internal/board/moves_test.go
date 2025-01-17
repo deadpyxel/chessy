@@ -423,3 +423,153 @@ func TestGenerateKingMoves(t *testing.T) {
 
 	}
 }
+
+func TestGeneratePawnMoves(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(*Board)
+		startSq       Square
+		cl            Color
+		expectedMoves []Move
+	}{
+		{
+			name: "white pawn starting on e2 on empty board should return two moves",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 12) // e2
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(12),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 12, To: 20, Type: Normal}, // e2 -> e3
+				{From: 12, To: 28, Type: Normal}, // e2 -> e4
+			},
+		},
+		{
+			name: "black pawn starting on e7 on empty board should return two moves",
+			setup: func(b *Board) {
+				b.Pieces[Black][Pawn] = Bitboard(1 << 52) // e7
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(52),
+			cl:      Black,
+			expectedMoves: []Move{
+				{From: 52, To: 44, Type: Normal}, // e7 -> e6
+				{From: 52, To: 36, Type: Normal}, // e7 -> e5
+			},
+		},
+		{
+			name: "black pawn on e5 on empty board should return one move",
+			setup: func(b *Board) {
+				b.Pieces[Black][Pawn] = Bitboard(1 << 36) // e5
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(36),
+			cl:      Black,
+			expectedMoves: []Move{
+				{From: 36, To: 28, Type: Normal}, // e5 -> e4
+			},
+		},
+		{
+			name: "white pawn on e4 on empty board should return a single move",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 28) // e4
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(28),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 28, To: 36, Type: Normal}, // e4 -> e5
+			},
+		},
+		{
+			name: "white pawn starting on e2 blocked by friendly piece should return no moves",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1<<12 | 1<<20) // e2 and e3
+				b.UpdateOccupiedSquares()
+			},
+			startSq:       Square(12),
+			cl:            White,
+			expectedMoves: []Move{},
+		},
+		{
+			name: "white pawn on e4 with black pieces on d5 and f5 should return three moves with captures",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 28)       // e4
+				b.Pieces[Black][Pawn] = Bitboard(1<<35 | 1<<37) // d5 and f5
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(28),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 28, To: 36, Type: Normal},
+				{From: 28, To: 35, Type: Capture},
+				{From: 28, To: 37, Type: Capture},
+			},
+		},
+		{
+			name: "white pawn on edge a4 with black pieces on b5 should return two moves with a capture",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 24) // a4
+				b.Pieces[Black][Pawn] = Bitboard(1 << 33) // b5
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(24),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 24, To: 32, Type: Normal},
+				{From: 24, To: 33, Type: Capture},
+			},
+		},
+		{
+			name: "black pawn on e2 on empty board should return four promotion moves",
+			setup: func(b *Board) {
+				b.Pieces[Black][Pawn] = Bitboard(1 << 12) // e5
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(12),
+			cl:      Black,
+			expectedMoves: []Move{
+				{From: 12, To: 4, Type: Promotion, Promotion: Knight}, // e1=N
+				{From: 12, To: 4, Type: Promotion, Promotion: Rook},   // e1=R
+				{From: 12, To: 4, Type: Promotion, Promotion: Bishop}, // e1=B
+				{From: 12, To: 4, Type: Promotion, Promotion: Queen},  // e1=Q
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setup(b)
+
+			var ml MoveList
+			b.generatePawnMoves(tt.startSq, tt.cl, &ml)
+			if ml.Count != len(tt.expectedMoves) {
+				t.Errorf("Expected moveset to have %d entries, got %d instead", len(tt.expectedMoves), ml.Count)
+				fmt.Printf("%s\n", &ml)
+			}
+
+			genMoves := extractMoves(&ml)
+			for _, expMove := range tt.expectedMoves {
+				move, exists := genMoves[expMove.To]
+				if !exists {
+					t.Errorf("Expected move to %s not found", expMove.To)
+					continue
+				}
+				if move.From != tt.startSq {
+					t.Errorf("Expected move to start at %s, got %s instead", tt.startSq, move.From)
+				}
+				if move.From != expMove.From {
+					t.Errorf("Mismatch between expected move start at %s, got %s instead", expMove.From, move.From)
+				}
+				if move.Type != expMove.Type {
+					t.Errorf("Expected move to %s type to be %d, got %d instead", expMove.To, expMove.Type, move.Type)
+				}
+				if move.Type == Promotion && move.Promotion != expMove.Promotion {
+					t.Errorf("Expected promotion target to be %d, got %d instead", expMove.Promotion, move.Promotion)
+				}
+			}
+		})
+
+	}
+}
