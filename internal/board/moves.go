@@ -46,7 +46,7 @@ var (
 	QueenDirections  = [8]int{-9, -8, -7, -1, 1, 7, 8, 9} // combined Bishop and Rook movements
 )
 
-func isOutOfBounds(sq int) bool {
+func isOutOfBoard(sq int) bool {
 	return sq < 0 || sq > 63
 }
 
@@ -84,7 +84,7 @@ func (b *Board) generateKnightMoves(sq Square, color Color, ml *MoveList) {
 	for _, offset := range KnightMoves {
 		toSq := int(sq) + offset
 		// Skip out of bounds positions
-		if isOutOfBounds(toSq) {
+		if isOutOfBoard(toSq) {
 			continue
 		}
 

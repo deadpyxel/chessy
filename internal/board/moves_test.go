@@ -14,7 +14,7 @@ func extractMoves(ml *MoveList) map[Square]Move {
 	return genMoves
 }
 
-func TestIsOutOfBounds(t *testing.T) {
+func TestIsOutOfBoard(t *testing.T) {
 	tests := []struct {
 		name     string
 		sq       int
@@ -29,7 +29,7 @@ func TestIsOutOfBounds(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := isOutOfBounds(test.sq)
+			actual := isOutOfBoard(test.sq)
 			if actual != test.expected {
 				t.Errorf("expected %v, got %v", test.expected, actual)
 			}
