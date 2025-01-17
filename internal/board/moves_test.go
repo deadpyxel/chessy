@@ -156,21 +156,22 @@ func TestGenerateSlidingMoves(t *testing.T) {
 			},
 			expectedMoves: []Move{
 				// Northeast diagonal
-				{From: 28, To: 37, Type: Normal},
-				{From: 28, To: 46, Type: Normal},
-				{From: 28, To: 55, Type: Normal},
+				{From: 28, To: 37, Type: Normal}, // f5
+				{From: 28, To: 46, Type: Normal}, // g6
+				{From: 28, To: 55, Type: Normal}, // h7
 				// Southeast diagonal
-				{From: 28, To: 19, Type: Normal},
-				{From: 28, To: 10, Type: Normal},
-				{From: 28, To: 1, Type: Normal},
+				{From: 28, To: 19, Type: Normal}, // f3
+				{From: 28, To: 10, Type: Normal}, // g2
+				{From: 28, To: 1, Type: Normal},  // h1
 				// Southwest diagonal
-				{From: 28, To: 21, Type: Normal},
-				{From: 28, To: 14, Type: Normal},
-				{From: 28, To: 7, Type: Normal},
+				{From: 28, To: 21, Type: Normal}, // d3
+				{From: 28, To: 14, Type: Normal}, // c2
+				{From: 28, To: 7, Type: Normal},  // b1
 				// Northwest diagonal
-				{From: 28, To: 35, Type: Normal},
-				{From: 28, To: 42, Type: Normal},
-				{From: 28, To: 49, Type: Normal},
+				{From: 28, To: 35, Type: Normal}, // d5
+				{From: 28, To: 42, Type: Normal}, // c6
+				{From: 28, To: 49, Type: Normal}, // b7
+				{From: 28, To: 56, Type: Normal}, // a8
 			},
 		},
 		{

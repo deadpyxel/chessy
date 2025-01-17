@@ -115,40 +115,20 @@ func (b *Board) generateSlidingPieceMoves(sq Square, color Color, directions []i
 	occSameColor := b.OccupiedByColor[color]  // squares occupied by same color
 	occOppColor := b.OccupiedByColor[color^1] // squares ocuppied by opposite colors
 	fromFile := sq.FileOf()
-	fromRank := sq.RankOf()
 	for _, dir := range directions {
-		toSq := int(sq)
-		currFile := fromFile // Initialize currFile for this direction
-		currRank := fromRank
-
+		step := 1
+		lastFile := fromFile
 		for {
-			toSq += dir
+			toSq := int(sq) + (dir * step)
 			// Out of bounds check
-			if isOutOfBounds(toSq) {
+			if isOutOfBoard(toSq) {
 				break
 			}
 
 			tgtSq := Square(toSq)
 			toFile := tgtSq.FileOf()
-			toRank := tgtSq.RankOf()
-
-			fileDiff := utils.Abs(toFile - currFile)
-			rankDiff := utils.Abs(toRank - currRank)
-			absDir := utils.Abs(dir)
-
-			// For diagonal moves the difference should be only of 1
-			isDiagonal := absDir == 7 || absDir == 9
-			if isDiagonal && (fileDiff != 1 || rankDiff != 1) {
-				break
-			}
-			// For horizontal moves only the file should change
-			isHorizontal := absDir == 1
-			if isHorizontal && rankDiff != 0 {
-				break
-			}
-			// For vertical moves only the rank should change
-			isVertical := absDir == 8
-			if isVertical && fileDiff != 0 {
+			// Check if this move would wrap around board edges
+			if utils.Abs(toFile-lastFile) > 1 {
 				break
 			}
 			// Stop if we reach our own piece
@@ -164,8 +144,8 @@ func (b *Board) generateSlidingPieceMoves(sq Square, color Color, directions []i
 			}
 			ml.addMove(Move{From: sq, To: tgtSq, Type: mvType})
 			// Update current position
-			currFile = toFile
-			currRank = toRank
+			lastFile = toFile
+			step++
 		}
 	}
 }
