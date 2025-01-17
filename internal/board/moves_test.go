@@ -120,7 +120,7 @@ func TestGenerateKnightMoves(t *testing.T) {
 			b.generateKnightMoves(tt.startSq, White, &ml)
 			if ml.Count != len(tt.expectedMoves) {
 				t.Errorf("Expected moveset to have %d entries, got %d instead", len(tt.expectedMoves), ml.Count)
-				fmt.Printf("%v\n", ml.Moves[:ml.Count])
+				fmt.Printf("%s\n", &ml)
 			}
 
 			genMoves := extractMoves(&ml)
@@ -129,6 +129,12 @@ func TestGenerateKnightMoves(t *testing.T) {
 				if !exists {
 					t.Errorf("Expected move to %s not found", expMove.To)
 					continue
+				}
+				if move.From != tt.startSq {
+					t.Errorf("Expected move to start at %s, got %s instead", tt.startSq, move.From)
+				}
+				if move.From != expMove.From {
+					t.Errorf("Mismatch between expected move start at %s, got %s instead", expMove.From, move.From)
 				}
 				if move.Type != expMove.Type {
 					t.Errorf("Expected move to %s type to be %d, got %d instead", expMove.To, expMove.Type, move.Type)
@@ -259,6 +265,12 @@ func TestGenerateSlidingMoves(t *testing.T) {
 				if !exists {
 					t.Errorf("Expected move to %s not found", expMove.To)
 					continue
+				}
+				if move.From != tt.startSq {
+					t.Errorf("Expected move to start at %s, got %s instead", tt.startSq, move.From)
+				}
+				if move.From != expMove.From {
+					t.Errorf("Mismatch between expected move start at %s, got %s instead", expMove.From, move.From)
 				}
 				if move.Type != expMove.Type {
 					t.Errorf("Expected move to %s type to be %d, got %d instead", expMove.To, expMove.Type, move.Type)
