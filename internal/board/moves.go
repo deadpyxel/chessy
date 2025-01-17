@@ -94,7 +94,43 @@ func (b *Board) generatePawnMoves(sq Square, color Color, ml *MoveList) {
 }
 
 func (b *Board) generateKingMoves(sq Square, color Color, ml *MoveList) {
+	occSameColor := b.OccupiedByColor[color]  // squares occupied by same color
+	occOppColor := b.OccupiedByColor[color^1] // squares ocuppied by opposite colors
 
+	fromFile := sq.FileOf()
+
+	for _, offset := range KingMoves {
+		toSq := int(sq) + offset
+		// Skip positions out of the board
+		if isOutOfBoard(toSq) {
+			continue
+		}
+
+		tgtSq := Square(toSq)
+		toFile := tgtSq.FileOf()
+
+		// Check if this move would wrap around the edges
+		if utils.Abs(fromFile-toFile) > 1 {
+			continue
+		}
+
+		if !occSameColor.IsSet(tgtSq) {
+			mvType := Normal
+			// Check if this is a capture
+			if occOppColor.IsSet(tgtSq) {
+				mvType = Capture
+			}
+			ml.addMove(Move{
+				From: sq,
+				To:   tgtSq,
+				Type: mvType,
+			})
+		}
+	}
+
+	// TODO: Handle castling
+	// it will need to track board state, if the king/rook has moved, if the path is clear
+	// if king is not in check and if the squares related are not under attack
 }
 
 func (b *Board) generateKnightMoves(sq Square, color Color, ml *MoveList) {
