@@ -90,7 +90,98 @@ func (b *Board) generatePieceMoves(sq Square, piece Piece, color Color, ml *Move
 }
 
 func (b *Board) generatePawnMoves(sq Square, color Color, ml *MoveList) {
+	occOppColor := b.OccupiedByColor[color^1]
+	occupied := b.OccupiedSquares
 
+	fromFile := sq.FileOf()
+	fromRank := sq.RankOf()
+
+	var forward, startRank, prePromRank int // Determine direction and starting rank based on color
+	if color == White {
+		forward = 8     // direction of "forward" for pawns
+		startRank = 1   // starting rank for pawns
+		prePromRank = 6 // rank before promotion
+	} else {
+		forward = -8
+		startRank = 6
+		prePromRank = 1
+	}
+
+	// Normal movements
+	singlePush := int(sq) + forward
+	tgtSq := Square(singlePush)
+	if !isOutOfBoard(singlePush) && !occupied.IsSet(tgtSq) {
+		// we are promoting
+		if fromRank == prePromRank {
+			for piece := Knight; piece <= Queen; piece++ {
+				ml.addMove(Move{
+					From:      sq,
+					To:        tgtSq,
+					Type:      Promotion,
+					Promotion: piece,
+				})
+			}
+		} else {
+			ml.addMove(Move{
+				From: sq,
+				To:   tgtSq,
+				Type: Normal,
+			})
+		}
+
+		// Double push (if on starting rank and single push is possible)
+		if fromRank == startRank {
+			doublePush := singlePush + forward
+			tgtSq = Square(doublePush)
+			if !occupied.IsSet(tgtSq) {
+				ml.addMove(Move{
+					From: sq,
+					To:   tgtSq,
+					Type: Normal,
+				})
+			}
+		}
+	}
+
+	// Captures
+	captureDir := []int{forward - 1, forward + 1} // front diagonals
+	for _, dir := range captureDir {
+		capSq := int(sq) + dir
+		if isOutOfBoard(capSq) {
+			continue
+		}
+
+		tgtSq = Square(capSq)
+		tgtFile := tgtSq.FileOf()
+		// check for edge wrapping
+		if utils.Abs(fromFile-tgtFile) > 1 {
+			continue
+		}
+		// Normal Captures
+		if occOppColor.IsSet(tgtSq) {
+			if fromRank == prePromRank {
+				for piece := Knight; piece <= Queen; piece++ {
+					ml.addMove(Move{
+						From:      sq,
+						To:        tgtSq,
+						Type:      Capture | Promotion,
+						Promotion: piece,
+					})
+				}
+			} else {
+				ml.addMove(Move{
+					From: sq,
+					To:   tgtSq,
+					Type: Capture,
+				})
+			}
+		}
+	}
+	// TODO: Add en passant captures
+	// This will require:
+	// 1. Tracking the last moved pawn
+	// 2. Checking if it moved two squares
+	// 3. Checking if our pawn is on the correct rank (5th for white, 4th for black)
 }
 
 func (b *Board) generateKingMoves(sq Square, color Color, ml *MoveList) {
