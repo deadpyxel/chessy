@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestSquareString(t *testing.T) {
+	tests := []struct {
+		sq           Square
+		wantNotation string
+	}{
+		{sq: Square(0), wantNotation: "a1"},
+		{sq: Square(63), wantNotation: "h8"},
+		{sq: Square(28), wantNotation: "e4"},
+		{sq: Square(10), wantNotation: "c2"},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Square %d String() results in %s notation", tt.sq, tt.wantNotation), func(t *testing.T) {
+			result := tt.sq.String()
+			if result != tt.wantNotation {
+				t.Errorf("Expected %s, but got %s", tt.wantNotation, result)
+			}
+		})
+	}
+}
+
 func TestSquareFileOf(t *testing.T) {
 	tests := []struct {
 		sq       Square
