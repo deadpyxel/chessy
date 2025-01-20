@@ -78,3 +78,50 @@ func TestBoardUpdateOccupiedSquares(t *testing.T) {
 		t.Errorf("Expected all pieces to occupy the following squares:\n%s\n got \n%s\n", b.OccupiedSquares, expectedOccupiedSquares)
 	}
 }
+
+func TestPlayMoveNormal(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(*Board)
+		mv            Move
+		expectedBoard func(*Board)
+	}{
+		{
+			name: "white pawn on e4 can move to e5",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 28)
+				b.SideToMove = White
+				b.UpdateOccupiedSquares()
+			},
+			mv: Move{From: Square(28), To: Square(36), Type: Normal},
+			expectedBoard: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 36)
+				b.SideToMove = Black
+				b.UpdateOccupiedSquares()
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setup(b)
+
+			err := b.PlayMove(tt.mv)
+			if err != nil {
+				t.Errorf("Expected no error, got %v instead", err)
+			}
+
+			expectedBoard := &Board{}
+			tt.expectedBoard(expectedBoard)
+
+			// After the move is played, the active playing side should change
+			if b.SideToMove != expectedBoard.SideToMove {
+				t.Errorf("side to move should be to %v after playing the move, got %v instead", expectedBoard.SideToMove, b.SideToMove)
+			}
+
+			if !b.isEqualBoard(*expectedBoard) {
+				t.Errorf("resulting board does not match desired output")
+			}
+		})
+	}
+}

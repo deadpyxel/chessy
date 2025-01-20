@@ -28,3 +28,17 @@ func (b *Board) PlayMove(m Move) error {
 
 	return nil
 }
+
+func (b *Board) isEqualBoard(other Board) bool {
+	if b.OccupiedSquares != other.OccupiedSquares {
+		return false
+	}
+	for color := White; color <= Black; color++ {
+		for piece := Pawn; piece <= King; piece++ {
+			if b.Pieces[color][piece] != other.Pieces[color][piece] {
+				return false
+			}
+		}
+	}
+	return true
+}
