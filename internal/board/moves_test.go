@@ -551,6 +551,41 @@ func TestGeneratePawnMoves(t *testing.T) {
 				{From: 12, To: 4, Type: Promotion, Promotion: Queen},  // e1=Q
 			},
 		},
+		{
+			name: "white pawn on e7 on position with captures should return four promotion moves and 4 captures+promotions",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 52)   // e7
+				b.Pieces[Black][Bishop] = Bitboard(1 << 61) // f8
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(52),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 52, To: 60, Type: Promotion, Promotion: Knight},           // e8=N
+				{From: 52, To: 60, Type: Promotion, Promotion: Rook},             // e8=R
+				{From: 52, To: 60, Type: Promotion, Promotion: Bishop},           // e8=B
+				{From: 52, To: 60, Type: Promotion, Promotion: Queen},            // e8=Q
+				{From: 52, To: 61, Type: Capture | Promotion, Promotion: Knight}, // exf8=N
+				{From: 52, To: 61, Type: Capture | Promotion, Promotion: Rook},   // exf8=N
+				{From: 52, To: 61, Type: Capture | Promotion, Promotion: Bishop}, // exf8=N
+				{From: 52, To: 61, Type: Capture | Promotion, Promotion: Queen},  // exf8=N
+			},
+		},
+		{
+			name: "white pawn on a4 on position with captures should return one capture and one move without edge wrapping",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 24)         // a4
+				b.Pieces[Black][Bishop] = Bitboard(1 << 33)       // b5
+				b.Pieces[Black][Knight] = Bitboard(1<<39 | 1<<31) // h5 and h4
+				b.UpdateOccupiedSquares()
+			},
+			startSq: Square(24),
+			cl:      White,
+			expectedMoves: []Move{
+				{From: 24, To: 32, Type: Normal},  // a5
+				{From: 24, To: 33, Type: Capture}, // axb5
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
