@@ -5,6 +5,21 @@ import (
 	"testing"
 )
 
+// composite map keys: https://go.dev/play/p/DX88J59peXH
+type mvKey struct {
+	sq Square
+	t  MoveType
+	p  Piece
+}
+
+func genMoveKey(mv Move) mvKey {
+	return mvKey{
+		sq: mv.To,
+		t:  mv.Type,
+		p:  mv.Promotion,
+	}
+}
+
 func extractMoves(ml *MoveList) map[Square]Move {
 	genMoves := make(map[Square]Move)
 	for i := 0; i < ml.Count; i++ {
@@ -549,9 +564,14 @@ func TestGeneratePawnMoves(t *testing.T) {
 				fmt.Printf("%s\n", &ml)
 			}
 
-			genMoves := extractMoves(&ml)
+			// custom move extraction with composite key for pawn moves (promotion cases)
+			genMoves := make(map[mvKey]Move)
+			for i := 0; i < ml.Count; i++ {
+				move := ml.Moves[i]
+				genMoves[genMoveKey(move)] = move
+			}
 			for _, expMove := range tt.expectedMoves {
-				move, exists := genMoves[expMove.To]
+				move, exists := genMoves[genMoveKey(expMove)]
 				if !exists {
 					t.Errorf("Expected move to %s not found", expMove.To)
 					continue
