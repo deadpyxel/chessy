@@ -110,7 +110,8 @@ type Board struct {
 	OccupiedByColor [2]Bitboard // All pieces of the same color
 
 	// Positional information
-	SideToMove Color
+	SideToMove    Color
+	FullMoveCount int
 }
 
 // SetInitialBoard initializes the chess board with the starting positions of all pieces.
@@ -132,6 +133,9 @@ func (b *Board) SetInitialBoard() {
 
 	// Update all occupied squares on the boards
 	b.UpdateOccupiedSquares()
+
+	b.SideToMove = White
+	b.FullMoveCount = 1
 }
 
 // UpdateOccupiedSquares updates the occupied squares on the board for both white and black pieces.
@@ -157,4 +161,22 @@ func (b *Board) GetPieceAt(sq Square) (Color, Piece) {
 		}
 	}
 	return None, Empty
+}
+
+func (p *Piece) String() string {
+	switch *p {
+	case King:
+		return "K"
+	case Queen:
+		return "Q"
+	case Rook:
+		return "R"
+	case Bishop:
+		return "B"
+	case Knight:
+		return "N"
+	case Pawn:
+		return "P"
+	}
+	return "Empty"
 }

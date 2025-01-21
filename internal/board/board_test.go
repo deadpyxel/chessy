@@ -125,3 +125,64 @@ func TestPlayMoveNormal(t *testing.T) {
 		})
 	}
 }
+
+func TestBoardToFEN(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func(*Board)
+		expected string
+	}{
+		{
+			name: "empty board",
+			setup: func(b *Board) {
+				// Empty
+				b.FullMoveCount = 1 // particular case where we have the move counter as zero
+
+			},
+			expected: "8/8/8/8/8/8/8/8 w KQkq - 0 1",
+		},
+		{
+			name: "initial position",
+			setup: func(b *Board) {
+				b.SetInitialBoard()
+			},
+			expected: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+		},
+		{
+			name: "after 1. e4",
+			setup: func(b *Board) {
+				b.SetInitialBoard()
+				b.PlayMove(Move{
+					From: Square(12), // e2
+					To:   Square(28), // e4
+					Type: Normal,
+				})
+			},
+			expected: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+		},
+		{
+			name: "complex middle game position",
+			setup: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1<<18 | 1<<20 | 1<<21 | 1<<28) // c3, e3, f3, e4
+				b.Pieces[White][Knight] = Bitboard(1 << 42)                     // Nc6
+				b.Pieces[White][King] = Bitboard(1 << 6)                        // Kg1
+				b.Pieces[Black][Pawn] = Bitboard(1<<49 | 1<<50 | 1<<51 | 1<<52) // b7, c7, d7, e7
+				b.Pieces[Black][Queen] = Bitboard(1 << 40)                      // Qa6
+				b.FullMoveCount = 1
+				b.UpdateOccupiedSquares()
+			},
+			expected: "8/1pppp3/q1N5/8/4P3/2P1PP2/8/6K1 w KQkq - 0 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setup(b)
+
+			result := b.ToFEN()
+			if result != tt.expected {
+				t.Errorf("expected FEN to be %s, got %s instead", tt.expected, result)
+			}
+		})
+	}
+}

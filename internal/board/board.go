@@ -1,6 +1,10 @@
 package board
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 func (b *Board) PlayMove(m Move) error {
 	// get moving piece from the board
@@ -41,4 +45,47 @@ func (b *Board) isEqualBoard(other Board) bool {
 		}
 	}
 	return true
+}
+
+func (b *Board) ToFEN() string {
+	enPassTgt := "-" // tracks en passant target square
+	castAb := "KQkq" // tracks castling privileges
+	hmClock := 0     // tracks the half move related to the 50 move draw rule
+	sideToMove := "w"
+	if b.SideToMove == Black {
+		sideToMove = "b"
+	}
+
+	var sb strings.Builder
+	// Board state, traverve ranks in reverse (8 to 1)
+	for rank := 7; rank >= 0; rank-- {
+		emptyCount := 0
+		// Traverse files 1 to 8
+		for file := 0; file < 8; file++ {
+			sq := Square(rank*8 + file)
+			color, piece := b.GetPieceAt(sq)
+			if piece == Empty {
+				emptyCount++
+				// If we are at the end of a rank, append the count
+				if file == 7 && emptyCount > 0 {
+					sb.WriteString(strconv.Itoa(emptyCount))
+				}
+				continue
+			}
+			// If we had empty squares before this piece, add the count
+			if emptyCount > 0 {
+				sb.WriteString(strconv.Itoa(emptyCount))
+				emptyCount = 0
+			}
+			pieceStr := piece.String()
+			if color == Black {
+				pieceStr = strings.ToLower(pieceStr)
+			}
+			sb.WriteString(pieceStr)
+		}
+		if rank > 0 {
+			sb.WriteRune('/')
+		}
+	}
+	return fmt.Sprintf("%s %s %s %s %d %d", sb.String(), sideToMove, castAb, enPassTgt, hmClock, b.FullMoveCount)
 }
