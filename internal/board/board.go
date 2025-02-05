@@ -20,16 +20,41 @@ func (b *Board) PlayMove(m Move) error {
 	// Handle different move types
 	switch m.Type {
 	case Normal:
-		// Clear the piece from its original position
-		b.Pieces[pCol][piece] = b.Pieces[pCol][piece].Clear(m.From)
-		// Sets the piece in its new position
-		b.Pieces[pCol][piece] = b.Pieces[pCol][piece].Set(m.To)
+		b.movePiece(pCol, piece, m.From, m.To)
+	case Capture:
+		tgtCol, tgtPiece := b.GetPieceAt(m.To)
+		if tgtCol == None || tgtPiece == Empty {
+			return fmt.Errorf("capture move with no piece at target square: %v", m.To)
+		}
+		// Remove piece currently on target square and move piece to taht position
+		b.Pieces[tgtCol][tgtPiece] = b.Pieces[tgtCol][tgtPiece].Clear(m.To)
+		b.movePiece(pCol, piece, m.From, m.To)
+	case Promotion:
+		b.Pieces[pCol][Pawn] = b.Pieces[pCol][Pawn].Clear(m.From)
+		b.Pieces[pCol][m.Promotion] = b.Pieces[pCol][m.Promotion].Set(m.To)
+		// TODO: Cover EnPassant, castling and Promotion + Capture cases
+	default:
+		return fmt.Errorf("unsupported move type: %v", m.Type)
 	}
 
 	b.UpdateOccupiedSquares()
+	if b.SideToMove == Black {
+		b.FullMoveCount += 1
+	}
 
 	b.SideToMove ^= 1 // toggle active player
 
+	return nil
+}
+
+// PlayMoveSequence plays a sequence of moves, assuming alternating turns
+func (b *Board) PlayMoveSequence(ml []Move) error {
+	for _, m := range ml {
+		err := b.PlayMove(m)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -45,6 +70,10 @@ func (b *Board) isEqualBoard(other Board) bool {
 		}
 	}
 	return true
+}
+
+func (b *Board) movePiece(cl Color, p Piece, from, to Square) {
+	b.Pieces[cl][p] = b.Pieces[cl][p].Clear(from).Set(to)
 }
 
 func (b *Board) ToFEN() string {
