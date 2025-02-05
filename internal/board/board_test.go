@@ -126,6 +126,97 @@ func TestPlayMoveNormal(t *testing.T) {
 	}
 }
 
+func TestPlayMoveCapture(t *testing.T) {
+	tests := []struct {
+		name          string
+		setupBoard    func(*Board)
+		mv            Move
+		expectedBoard func(*Board)
+	}{
+		{
+			name: "white pawn on e4 can capture black pawn on  d5",
+			setupBoard: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 28)
+				b.Pieces[Black][Pawn] = Bitboard(1 << 35)
+				b.SideToMove = White
+				b.UpdateOccupiedSquares()
+			},
+			mv: Move{From: Square(28), To: Square(35), Type: Capture},
+			expectedBoard: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 35)
+				b.SideToMove = Black
+				b.UpdateOccupiedSquares()
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setupBoard(b)
+
+			err := b.PlayMove(tt.mv)
+			if err != nil {
+				t.Errorf("Expected no error, got %v instead", err)
+			}
+			expectedBoard := &Board{}
+			tt.expectedBoard(expectedBoard)
+			// After the move is played, the active playing side should change
+			if b.SideToMove != expectedBoard.SideToMove {
+				t.Errorf("side to move should be to %v after playing the move, got %v instead", expectedBoard.SideToMove, b.SideToMove)
+			}
+
+			if !b.isEqualBoard(*expectedBoard) {
+				t.Errorf("resulting board does not match desired output")
+			}
+		})
+	}
+}
+
+func TestPlayMovePromotion(t *testing.T) {
+	tests := []struct {
+		name          string
+		setupBoard    func(*Board)
+		mv            Move
+		expectedBoard func(*Board)
+	}{
+		{
+			name: "white pawn on e7 can promote to Quen on e8",
+			setupBoard: func(b *Board) {
+				b.Pieces[White][Pawn] = Bitboard(1 << 52)
+				b.SideToMove = White
+				b.UpdateOccupiedSquares()
+			},
+			mv: Move{From: Square(52), To: Square(60), Type: Promotion, Promotion: Queen},
+			expectedBoard: func(b *Board) {
+				b.Pieces[White][Queen] = Bitboard(1 << 60)
+				b.SideToMove = Black
+				b.UpdateOccupiedSquares()
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setupBoard(b)
+
+			err := b.PlayMove(tt.mv)
+			if err != nil {
+				t.Errorf("Expected no error, got %v instead", err)
+			}
+			expectedBoard := &Board{}
+			tt.expectedBoard(expectedBoard)
+			// After the move is played, the active playing side should change
+			if b.SideToMove != expectedBoard.SideToMove {
+				t.Errorf("side to move should be to %v after playing the move, got %v instead", expectedBoard.SideToMove, b.SideToMove)
+			}
+
+			if !b.isEqualBoard(*expectedBoard) {
+				t.Errorf("resulting board does not match desired output")
+			}
+		})
+	}
+}
+
 func TestBoardToFEN(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -182,6 +273,33 @@ func TestBoardToFEN(t *testing.T) {
 			result := b.ToFEN()
 			if result != tt.expected {
 				t.Errorf("expected FEN to be %s, got %s instead", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestPlayMoveError(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(*Board)
+		move  Move
+	}{
+		{
+			name: "invalid move type returns error when played",
+			setup: func(b *Board) {
+				b.SetInitialBoard()
+			},
+			move: Move{From: Square(12), To: Square(20), Type: Promotion * 2}, // invalid move type
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Board{}
+			tt.setup(b)
+
+			err := b.PlayMove(tt.move)
+			if err == nil {
+				t.Error("expected error, got nil instead")
 			}
 		})
 	}
